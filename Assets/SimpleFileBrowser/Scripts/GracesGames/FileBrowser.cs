@@ -111,7 +111,6 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		private string _fileExtension;
 
 		// ----- METHODS -----
-
 		public void Awake() {
 			if(isAndroidPlatform()) {
 			 AndroidJavaClass jc = new AndroidJavaClass("android.os.Environment") ;
