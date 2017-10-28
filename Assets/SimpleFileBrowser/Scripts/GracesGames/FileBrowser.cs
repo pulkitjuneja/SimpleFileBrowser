@@ -92,13 +92,16 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		
 		// The current path of the file browser
 		// Instantiated using the current directory of the Unity Project
-		private string _currentPath = Directory.GetCurrentDirectory();
+		private string _currentPath ;
 
 		// The currently selected file
 		private string _currentFile;
 
 		// The name for file to be saved
 		private string _saveFileName;
+
+		// location of root android path, can be different for different device manufacturers
+		private string _rootAndroidPath;
 
 		// Stacks to keep track for backward and forward navigation feature
 		private readonly FiniteStack<string> _backwardStack = new FiniteStack<string> ();
@@ -108,6 +111,17 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		private string _fileExtension;
 
 		// ----- METHODS -----
+
+		public void Awake() {
+			if(isAndroidPlatform()) {
+			 AndroidJavaClass jc = new AndroidJavaClass("android.os.Environment") ;
+             _rootAndroidPath  = jc.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");
+			 _currentPath = _rootAndroidPath;
+			 Debug.Log(Directory.GetParent(_rootAndroidPath).ToString());
+			} else {
+				_currentPath = Directory.GetCurrentDirectory();
+			}
+		}
 
 		// Finds and returns a game object by name or prints an error and return null
 		private GameObject FindGameObjectOrError(string objectName) {
@@ -227,12 +241,20 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		// When there is no parent, show the drives of the computer
 		private void DirectoryUp() {
 			_backwardStack.Push(_currentPath);
-			if (Directory.GetParent(_currentPath) != null) {
+			if (!isTopLevelreached()) {
 				_currentPath = Directory.GetParent(_currentPath).FullName;
 				UpdateFileBrowser();
 			} else {
-				_currentPath = "/";
-				UpdateFileBrowser(true);
+				 UpdateFileBrowser(true);
+			}
+		}
+
+		// parent direcotry check as android throws permisison error of tried to go above root external storage directory
+		private bool isTopLevelreached() {
+			if(Application.platform == RuntimePlatform.Android) {
+				return Directory.GetParent(_currentPath).FullName == Directory.GetParent(_rootAndroidPath).FullName;
+			} else {
+				return Directory.GetParent(_currentPath) == null;
 			}
 		}
 
@@ -319,15 +341,20 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 
 		// Creates a DirectoryButton for each directory in the current path
 		private void BuildDirectories(bool topLevel) {
-			// Get the directories
-			string[] directories = Directory.GetDirectories(_currentPath);
+			string[] directories = null;
 			// If the top level is reached return the drives
 			if (topLevel) {
 				if (IsWindowsPlatform()) {
 					directories = Directory.GetLogicalDrives();
 				} else if (IsMacOsPlatform()) {
 					directories = Directory.GetDirectories("/Volumes");
+				} else if (isAndroidPlatform()) {
+					_currentPath = _rootAndroidPath;
+					directories = Directory.GetDirectories(_currentPath);
 				}
+			} else {
+			// Get the directories
+			directories = Directory.GetDirectories(_currentPath);
 			}
 			// For each directory in the current directory, create a DirectoryButton and hook up the DirectoryClick method
 			foreach (string dir in directories) {
@@ -339,6 +366,10 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		private bool IsWindowsPlatform() {
 			return (Application.platform == RuntimePlatform.WindowsEditor ||
 			        Application.platform == RuntimePlatform.WindowsPlayer);
+		}
+
+		private bool isAndroidPlatform () {
+			return Application.platform == RuntimePlatform.Android;
 		}
 
 		// Returns whether the application is run on a Mac Operating System
