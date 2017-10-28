@@ -116,7 +116,6 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 			 AndroidJavaClass jc = new AndroidJavaClass("android.os.Environment") ;
              _rootAndroidPath  = jc.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");
 			 _currentPath = _rootAndroidPath;
-			 Debug.Log(Directory.GetParent(_rootAndroidPath).ToString());
 			} else {
 				_currentPath = Directory.GetCurrentDirectory();
 			}
