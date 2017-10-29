@@ -110,17 +110,8 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		// String file extension to filter results and save new files
 		private string _fileExtension;
 
-		// ----- METHODS -----
-		public void Awake() {
-			if(IsAndroidPlatform()) {
-			 AndroidJavaClass jc = new AndroidJavaClass("android.os.Environment") ;
-             _rootAndroidPath  = jc.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");
-			 _currentPath = _rootAndroidPath;
-			} else {
-				_currentPath = Directory.GetCurrentDirectory();
-			}
-		}
-
+		// ----- METHODS ----//
+		
 		// Finds and returns a game object by name or prints an error and return null
 		private GameObject FindGameObjectOrError(string objectName) {
 			GameObject foundGameObject = GameObject.Find(objectName);
