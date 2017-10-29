@@ -112,7 +112,7 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 
 		// ----- METHODS -----
 		public void Awake() {
-			if(isAndroidPlatform()) {
+			if(IsAndroidPlatform()) {
 			 AndroidJavaClass jc = new AndroidJavaClass("android.os.Environment") ;
              _rootAndroidPath  = jc.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");
 			 _currentPath = _rootAndroidPath;
@@ -201,6 +201,18 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 			// and hook up onValueChanged listener to update search results on value change
 			_searchInputField = FindGameObjectOrError("SearchInputField").GetComponent<InputField>();
 			_searchInputField.onValueChanged.AddListener(UpdateSearchFilter);
+			
+			if (IsAndroidPlatform()) {
+				SetupAndroidVariables();
+				_currentPath = _rootAndroidPath ;
+			} else {
+				_currentPath = Directory.GetCurrentDirectory();
+			}
+		}
+
+		private void SetupAndroidVariables() {
+			 AndroidJavaClass jc = new AndroidJavaClass("android.os.Environment") ;
+             _rootAndroidPath  = jc.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");
 		}
 		
 		// Returns to the previously selected directory (inverse of DirectoryForward)
@@ -239,7 +251,7 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 		// When there is no parent, show the drives of the computer
 		private void DirectoryUp() {
 			_backwardStack.Push(_currentPath);
-			if (!isTopLevelreached()) {
+			if (!IsTopLevelreached()) {
 				_currentPath = Directory.GetParent(_currentPath).FullName;
 				UpdateFileBrowser();
 			} else {
@@ -247,9 +259,9 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 			}
 		}
 
-		// parent direcotry check as android throws permisison error of tried to go above root external storage directory
-		private bool isTopLevelreached() {
-			if(Application.platform == RuntimePlatform.Android) {
+		// parent directory check as android throws permisison error of tried to go above root external storage directory
+		private bool IsTopLevelreached() {
+			if(IsAndroidPlatform()) {
 				return Directory.GetParent(_currentPath).FullName == Directory.GetParent(_rootAndroidPath).FullName;
 			} else {
 				return Directory.GetParent(_currentPath) == null;
@@ -346,7 +358,7 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 					directories = Directory.GetLogicalDrives();
 				} else if (IsMacOsPlatform()) {
 					directories = Directory.GetDirectories("/Volumes");
-				} else if (isAndroidPlatform()) {
+				} else if (IsAndroidPlatform()) {
 					_currentPath = _rootAndroidPath;
 					directories = Directory.GetDirectories(_currentPath);
 				}
@@ -366,7 +378,7 @@ namespace SimpleFileBrowser.Scripts.GracesGames {
 			        Application.platform == RuntimePlatform.WindowsPlayer);
 		}
 
-		private bool isAndroidPlatform () {
+		private bool IsAndroidPlatform () {
 			return Application.platform == RuntimePlatform.Android;
 		}
 
